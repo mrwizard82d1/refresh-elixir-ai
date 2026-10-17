@@ -14,6 +14,39 @@ stages is deliberate: refactoring a working program under green tests is part of
 - **Baseline before changing.** Start each stage on a green suite and finish it on a green suite.
   Commit at least once per exercise.
 
+## Design principles
+
+There's no formal Elixir equivalent of SOLID. The community has, though, largely converged on a
+handful of principles, and each comes with a stated reason. Every chapter has a **Design note**
+covering the principle that first matters in that stage.
+
+1. **The OTP design principles.** Separate the generic (a behaviour such as `GenServer`) from the
+   specific (your callback module), and structure the system as supervision trees in which
+   unanticipated failures crash and restart rather than being defensively handled. See the Erlang
+   *OTP Design Principles* guide, and Joe Armstrong's thesis *Making reliable distributed systems in
+   the presence of software errors* (2003) for the reasoning.
+2. **Use modules to organize code and processes to model runtime concerns.** A process is not an
+   object. Use one for concurrency, failure isolation, or state that lives over time, never just to
+   group code. (Saša Jurić, *To spawn, or not to spawn?*)
+3. **Functional core, imperative shell.** The domain is pure functions over plain data, and I/O,
+   state and processes stay at the edges. (Gary Bernhardt; Gray and Tate, *Designing Elixir Systems
+   with OTP*.)
+4. **Explicit boundaries with a small public API.** Group related modules behind one public module
+   (what Phoenix calls a "context"), and don't let callers reach into its internals.
+5. **Errors as values at boundaries, assertive code inside.** Expected failures come back as
+   `{:ok, _}` / `{:error, _}`. Inside, pattern-match on the shape you expect and let anything else
+   crash.
+
+The closest thing to an official list is the **anti-patterns guides** in the Elixir documentation
+(code, design, process and macro anti-patterns), each written as problem, example, refactoring.
+
+Rough SOLID mapping: **S**, small modules and one process per runtime concern; **O**, protocols and
+behaviours; **L**, behaviour contracts plus typespecs; **I**, small behaviours; **D**, depend on a
+behaviour and inject the implementation.
+
+Still contested: how big contexts should be, umbrella apps versus one app, whether Ecto schemas
+belong in the domain, and how far to lean on the new type system versus typespecs and Dialyzer.
+
 ## The domain
 
 You record your day in a flat markdown file:
@@ -55,6 +88,9 @@ Install a pinned Erlang/OTP and Elixir with mise, generate the Mix project, and 
 tools: `mix test`, `mix format`, Credo, and IEx. Ends with a green default test and a first commit.
 There's no domain code yet.
 
+**Design note: the application is the unit of composition.** Even without `--sup`, `mix new`
+generates an OTP *application*, which is what gets started, stopped, depended on and released.
+
 ### Stage 1: No storage, so the markdown file is the database
 
 Every command re-reads and re-parses the markdown file. This is where most of the core language
@@ -74,6 +110,10 @@ comes back:
 Deliverable: `mix tt.report --from 2026-10-12 --to 2026-10-18` prints a per-description summary
 straight from the markdown file.
 
+**Design note: functional core, imperative shell; parse at the boundary.** The parser turns
+untrusted text into valid structs or `{:error, reason}` exactly once, and the report code never sees
+a malformed line. The Mix task is the only code that touches files or prints.
+
 ### Stage 2: A serialized file store, and the `Storage` seam
 
 "Add" now means parsing markdown once and storing the activities. Stage 2 introduces:
@@ -89,6 +129,11 @@ straight from the markdown file.
 - configuration through `config/config.exs` and `Application.get_env/3`, plus dependency injection
   of the backend in tests
 
+**Design note: dependency inversion with behaviours, and explicit boundaries.** The domain depends
+on the `Storage` contract, not on a backend. We'll also compare **behaviours** (polymorphism by
+module) with **protocols** (polymorphism by data type) and say when each fits. A small public
+`TimeTracker` API is the boundary that the CLI calls.
+
 ### Stage 3: An in-memory process (`Agent`, then `GenServer`)
 
 The store becomes a long-lived process that loads from the file at start and writes back on change.
@@ -102,6 +147,12 @@ The store becomes a long-lived process that loads from the file at start and wri
 - testing stateful code: `start_supervised!/1`, isolation between tests, `async: true` and when it
   is unsafe
 
+**Design note: processes model runtime concerns, not code organization; generic versus specific.**
+The store gets a process because its state lives over time, and the parser and report stay plain
+modules. Writing the `GenServer` by hand shows OTP's split between the generic part (the behaviour)
+and the specific part (your callbacks). Crashing a supervised store on purpose shows "let it crash"
+working, and what it costs.
+
 ### Stage 4: ETS and DETS
 
 Replace or augment the process store with Erlang term storage.
@@ -114,6 +165,11 @@ Replace or augment the process store with Erlang term storage.
 - DETS for persistence, its limits, and comparing it with stage 2's file store
 - Erlang interop in general: charlists versus binaries, and calling `:module.function`
 
+**Design note: avoid unnecessary serialization through a single process.** A `GenServer` handles
+one message at a time, so routing every read through it creates a bottleneck. ETS allows
+concurrent reads while a process still owns the table's lifecycle, which separates *who owns the
+state* from *who can read it*.
+
 ### Stage 5 (optional): SQLite via Ecto
 
 A real database behind the same `Storage` behaviour.
@@ -123,6 +179,11 @@ A real database behind the same `Storage` behaviour.
 - `Ecto.Query` for date-range reports, with grouping and aggregation pushed into SQL
 - the SQL sandbox for concurrent, isolated tests
 - a final look back: the same report test suite, passing against five storage backends
+
+**Design note: validation at the boundary, and where the database belongs (contested).** Changesets
+are "parse at the boundary" applied to persistence. The open question is whether Ecto schemas
+*are* the domain structs or a persistence edge that maps to and from the stage 1 structs. We'll
+build it one way and argue the other.
 
 ## Conventions
 

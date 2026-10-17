@@ -136,6 +136,19 @@ Take a short tour, and say out loud what each file is for:
 
 **Check:** `mix compile` reports `Generated time_tracker app`.
 
+> **Design note: the application is the unit of composition.** You ran `mix new` without `--sup`,
+> but you still got an OTP **application**. Look at `application/0` in `mix.exs`, then run
+> `mix compile` and open `_build/dev/lib/time_tracker/ebin/time_tracker.app`. That generated
+> resource file is what OTP actually loads. An application is the unit OTP starts and stops,
+> that other applications depend on, and that a release bundles. It's the system-level counterpart
+> of the module. Your own code, `:logger`, `:crypto` and later Credo and Ecto are all applications,
+> and a running node is a set of them. In IEx (`iex -S mix`), `Application.started_applications()`
+> lists them.
+>
+> The OO habit to unlearn: there's no `main` that wires everything together. Each application
+> declares what it depends on and, optionally, a callback module that starts its supervision tree.
+> OTP starts them in dependency order. You'll write that callback module in stage 3.
+
 ## Task 0.6: Red, then green
 
 Running the stock tests is fine, but practising the red-green loop on something trivial is the
