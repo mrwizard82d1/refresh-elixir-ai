@@ -114,7 +114,7 @@ straight from the markdown file.
 untrusted text into valid structs or `{:error, reason}` exactly once, and the report code never sees
 a malformed line. The Mix task is the only code that touches files or prints.
 
-### Stage 2: A serialized file store, and the `Storage` seam
+### Stage 2: A serialized file store, and the `Storage` seam ([02-file-store.md](02-file-store.md))
 
 "Add" now means parsing markdown once and storing the activities. Stage 2 introduces:
 
@@ -132,7 +132,9 @@ a malformed line. The Mix task is the only code that touches files or prints.
 **Design note: dependency inversion with behaviours, and explicit boundaries.** The domain depends
 on the `Storage` contract, not on a backend. We'll also compare **behaviours** (polymorphism by
 module) with **protocols** (polymorphism by data type) and say when each fits. A small public
-`TimeTracker` API is the boundary that the CLI calls.
+`TimeTracker` API is the boundary that the CLI calls. (The full note, covering the Dependency
+Rule, ports and adapters, injection options, and enforcing dependency direction, is in
+[02-file-store.md](02-file-store.md#design-note-the-dependency-rule-in-elixir).)
 
 ### Stage 3: An in-memory process (`Agent`, then `GenServer`)
 
