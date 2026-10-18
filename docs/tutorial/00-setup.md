@@ -251,11 +251,15 @@ Work through these and note anything that surprises you:
 | `i "16-Oct"` then `i ~c"16-Oct"` | binary versus charlist, which matters for Erlang interop |
 | `exports(String)` | everything a module exports |
 | `TimeTracker.hello()` | your project code is loaded |
-| `v()` / `v(-2)` | previous results |
+| `v()` / `v(-2)` / `v(n)` | previous results: `-` counts back, `n` is a prompt number[^v] |
 | Edit `hello/0` to return `:mars`, then `recompile` and call it again | reload without restarting |
 | `dbg(Enum.map([1, 2, 3], &(&1 * 2)))` | `dbg/1` prints the expression *and* its value; with a pipeline it shows each step |
 | `~D[2026-10-16] \|> Date.day_of_week()` | the date sigil; you'll lean on `Date` a lot |
 | `Date.shift(~D[2026-10-16], week: -1)` | `Date.shift/2` and durations, used for "this week" |
+
+[^v]: `v()` = `v(-1)`; `v(0)` is an error. `v(n)` returns a *result*, not printed output, so it
+    shows nothing for `h`/`i`/`exports` prompts. **Prefer binding** (`r = TimeTracker.hello()`):
+    names don't shift.
 
 Exit with `Ctrl-\` (or `Ctrl-C` twice). Revert any edits to `hello/0`.
 
