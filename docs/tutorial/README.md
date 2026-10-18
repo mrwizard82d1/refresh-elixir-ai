@@ -91,7 +91,7 @@ There's no domain code yet.
 **Design note: the application is the unit of composition.** Even without `--sup`, `mix new`
 generates an OTP *application*, which is what gets started, stopped, depended on and released.
 
-### Stage 1: No storage, so the markdown file is the database
+### Stage 1: No storage, so the markdown file is the database ([01-markdown-store.md](01-markdown-store.md))
 
 Every command re-reads and re-parses the markdown file. This is where most of the core language
 comes back:
@@ -107,7 +107,7 @@ comes back:
 - doctests, `describe` blocks, and test tags
 - a thin command-line entry point (a Mix task first, an escript optionally), with `OptionParser`
 
-Deliverable: `mix tt.report --from 2026-10-12 --to 2026-10-18` prints a per-description summary
+Deliverable: `mix tt.report --from 2026-10-11 --to 2026-10-17` prints a per-description summary
 straight from the markdown file.
 
 **Design note: functional core, imperative shell; parse at the boundary.** The parser turns
