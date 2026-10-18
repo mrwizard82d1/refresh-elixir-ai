@@ -110,6 +110,39 @@ mix local.rebar --force
 
 **Check:** `mix hex.info` prints Hex, Elixir and OTP versions with no error.
 
+### Behind a TLS-inspecting proxy (a corporate network)
+
+`mix hex.info` only prints local versions. Now check that Hex can reach hex.pm:
+
+```sh
+mix hex.info credo   # should list recent releases
+```
+
+If it fails with `{:tls_alert, {:unknown_ca, ...}}`, a proxy is re-signing HTTPS traffic. To
+confirm:
+
+```sh
+echo | openssl s_client -connect hex.pm:443 -servername hex.pm 2>/dev/null \
+  | openssl x509 -noout -issuer
+# a corporate issuer (e.g. "Zscaler ...") rather than a public CA
+```
+
+IT usually installs the proxy's root CA into Ubuntu's system bundle, which is why `curl` and `apt`
+work. **Hex doesn't use that bundle by default**: it checks against its own built-in CA list. Point
+it at the system bundle:
+
+```sh
+mix hex.config cacerts_path /etc/ssl/certs/ca-certificates.crt
+```
+
+This is a Mix task, so run it in the shell. It **creates** `~/.hex/hex.config` for you. Don't create
+or edit that file by hand: Hex evaluates it as Elixir terms, and if the file doesn't parse, every
+Hex command crashes on startup. The setting lives under `~/.hex`, not the per-Elixir-version
+`MIX_HOME`, so it survives Elixir upgrades. (An alternative is
+`export HEX_CACERTS_PATH=/etc/ssl/certs/ca-certificates.crt` in `~/.zshrc`.)
+
+**Check:** `mix hex.info credo` lists recent releases.
+
 ## Task 0.5: Generate the Mix project
 
 Create the project **in a subdirectory**. The repo root keeps the docs, `mise.toml`, README and
