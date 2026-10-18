@@ -308,10 +308,10 @@ paths. (If it does, the `.gitignore` scoping went wrong, so fix it before going 
 
 You're done when all of these are true:
 
-- [ ] `elixir --version` shows 1.20.4 / OTP 29 inside the repo, and nothing outside it
-- [ ] `mix test`, `mix format --check-formatted` and `mix credo --strict` are all green in `time_tracker/`
-- [ ] you've seen a test and a doctest go red and back to green
-- [ ] stage 0 is committed on `2026-10`
+- [x] `elixir --version` shows 1.20.4 / OTP 29 inside the repo, and nothing outside it
+- [x] `mix test`, `mix format --check-formatted` and `mix credo --strict` are all green in `time_tracker/`
+- [x] you've seen a test and a doctest go red and back to green
+- [x] stage 0 is committed on `2026-10`
 
 **Next:** once these are true, tell me and I'll write stage 1, checking every failing test I give you
 against your own toolchain first.
