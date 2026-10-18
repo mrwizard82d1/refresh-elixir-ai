@@ -9,6 +9,12 @@ defmodule TimeTracker.ActivityTest do
     assert Activity.minutes(activity) == 165
   end
 
+  test "minutes/1 counts the minutes across an hour boundary" do
+    activity = %Activity{start: ~T[08:50:00], stop: ~T[09:20:00], description: "code review"}
+
+    assert Activity.minutes(activity) == 30
+  end
+
   test "every field is required" do
     assert_raise ArgumentError, fn -> struct!(Activity, description: "code review") end
   end
