@@ -154,7 +154,7 @@ Take a short tour, and say out loud what each file is for:
 Running the stock tests is fine, but practising the red-green loop on something trivial is the
 point here.
 
-1. Run `mix test`. **Check:** `1 doctest, 1 test, 0 failures`.
+1. Run `mix test`. **Check:** `Result: 2 passed (1 doctest, 1 test)`.
 2. Edit `test/time_tracker_test.exs` so the assertion expects `:mars` instead of `:world`.
 3. Run `mix test`. **Check:** 1 failure. Read the whole failure report, and notice that ExUnit shows
    the `left` and `right` sides of the `==` and colours the diff.
